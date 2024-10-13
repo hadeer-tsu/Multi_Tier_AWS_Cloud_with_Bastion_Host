@@ -16,5 +16,5 @@ key-pair.pem
 *.pem
 
 # Ignore SSH keys
-id_rsa
-id_rsa.pub
+yes
+yes.pub
