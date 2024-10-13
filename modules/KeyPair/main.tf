@@ -19,12 +19,4 @@ resource "null_resource" "create_private_key_file" {
     EOT
   }
 
-  provisioner "local-exec" {
-    when    = destroy
-    command = <<EOT
-      if [ -f ~/${var.key_pair_name}.pem ]; then
-        rm -f ~/${var.key_pair_name}.pem
-      fi
-    EOT
-  }
 }

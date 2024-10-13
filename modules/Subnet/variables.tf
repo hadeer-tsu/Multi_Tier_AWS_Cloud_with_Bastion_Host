@@ -1,24 +1,13 @@
-variable "vpc_id_input" {
-  description = "The ID of the VPC"
+variable "vpc_id" {
+  description = "The ID of the VPC where the subnets will be created"
   type        = string
 }
 
-variable "subnet_cidr_block" {
-  description = "The CIDR block for the subnet"
-  type        = string
-}
-
-variable "az" {
-  description = "The availability zone for the subnet"
-  type        = string
-}
-
-variable "public_ip" {
-  description = "Whether to assign a public IP on launch"
-  type        = bool
-}
-
-variable "subnet_display_name" {
-  description = "The name to assign to the subnet"
-  type        = string
+variable "subnet_configs" {
+  description = "A map of subnet configurations, where each key is the subnet name and value is an object containing subnet details"
+  type = map(object({
+    cidr_block              = string
+    availability_zone       = string
+    assign_public_ip        = bool
+  }))
 }

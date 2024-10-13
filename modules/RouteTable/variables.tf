@@ -27,3 +27,9 @@ variable "private_subnet_ids" {
   description = "A list of private subnet IDs to associate with the private route table"
   type        = list(string)
 }
+
+variable "bastion_instance_count" {
+  description = "The number of bastion instances to create."
+  type        = number
+  default     = 1  # or whatever default you prefer
+}

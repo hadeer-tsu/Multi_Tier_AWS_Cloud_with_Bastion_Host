@@ -1,11 +1,11 @@
-# Bastion Host Instances
 resource "aws_instance" "bastion" {
   count = var.bastion_instance_count
 
-  ami           = var.ami_id
-  instance_type = var.instance_type
-  subnet_id     = var.subnet_ids[count.index]
-  key_name      = var.key_name
+  ami                    = var.ami_id
+  instance_type          = var.instance_type
+  subnet_id              = var.subnet_ids[count.index]
+  key_name               = var.key_name
+  associate_public_ip_address = var.subnet_configs[count.index].assign_public_ip
 
   security_groups = [var.security_group_ids.bastion]
 
@@ -14,14 +14,14 @@ resource "aws_instance" "bastion" {
   }
 }
 
-# Private Instances
 resource "aws_instance" "private" {
   count = var.private_instance_count
 
-  ami           = var.ami_id
-  instance_type = var.instance_type
-  subnet_id     = var.subnet_ids[count.index]
-  key_name      = var.key_name
+  ami                    = var.ami_id
+  instance_type          = var.instance_type
+  subnet_id              = var.subnet_ids[count.index]
+  key_name               = var.key_name
+  associate_public_ip_address = var.subnet_configs[count.index].assign_public_ip
 
   security_groups = [var.security_group_ids.private]
 
