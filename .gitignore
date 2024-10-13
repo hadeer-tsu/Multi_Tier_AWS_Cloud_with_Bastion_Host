@@ -18,3 +18,4 @@ key-pair.pem
 # Ignore SSH keys
 yes
 yes.pub
+*.pub
