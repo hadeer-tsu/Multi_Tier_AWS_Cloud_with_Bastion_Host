@@ -1,4 +1,4 @@
-.trraform/*
+.terraform/*
 **/.terraform/*
 .terraform*
 .terraform/
@@ -14,3 +14,7 @@ crash.log
 .infracost*
 key-pair.pem
 *.pem
+
+# Ignore SSH keys
+id_rsa
+id_rsa.pub
