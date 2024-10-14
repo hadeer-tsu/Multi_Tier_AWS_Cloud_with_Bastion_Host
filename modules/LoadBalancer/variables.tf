@@ -22,3 +22,13 @@ variable "subnet_ids" {
   description = "The subnet IDs for the load balancer."
   type        = list(string)
 }
+
+variable "vpc_id" {
+  description = "The VPC ID where the load balancer is located"
+  type        = string
+}
+
+variable "instance_ids" {
+  description = "List of EC2 instance IDs to attach to the load balancer target group"
+  type        = list(string)
+}

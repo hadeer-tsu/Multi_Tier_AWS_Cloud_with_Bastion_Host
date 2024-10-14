@@ -1,30 +1,136 @@
 module "vpc" {
-  source     = "./modules/vpc"
-  cidr_block = "10.0.0.0/16"
-  vpc_name   = "my-vpc-Terraform"
+  source   = "./modules/VPC"
+  vpc_cidr = var.vpc_cidr
 }
 
-resource "null_resource" "public_instance_provisioners" {
+module "subnet" {
+  source = "./modules/Subnet"
+  vpc_id = module.vpc.vpc_id
+  subnet_configs = var.subnet_configs
 
-  connection {
-    type        = "ssh"
-    user        = "ubuntu"
-    private_key = file(var.key)
-    host        = aws_instance.instance[count.index].public_ip
-  }
+  # Ensure the subnets are created after the VPC
+  depends_on = [module.vpc]
+}
 
-  provisioner "file" {
-   
-    source      = "./key-pair.pem"
-    destination = "/home/ubuntu/key-pair.pem"
-    
-  }
+module "internet_gateway" {
+  source         = "./modules/IG"
+  vpc_id_input   = module.vpc.vpc_id
+  gateway_name   = "${var.project_name}-igw"
 
-  provisioner "remote-exec" {
-    inline = [
-      "chmod 400 /home/ubuntu/key-pair.pem"  # Ensure correct permissions
-    ]
-  }
-    depends_on = [aws_instance.instance]
+  # Ensure the IGW is created after the VPC
+  depends_on = [module.vpc]
+}
 
+module "nat_gateway" {
+  source                   = "./modules/NAT"
+  nat_gateway_name         = "${var.project_name}-nat-gw"
+  public_subnet_id_input = module.subnet.public_subnets[0] 
+
+  # Ensure the NAT gateway is created after the public subnet and the internet gateway
+  depends_on = [module.subnet, module.internet_gateway]
+}
+module "route_table" {
+  source                   = "./modules/RouteTable"
+  vpc_id_input             = module.vpc.vpc_id
+  internet_gateway_id_input = module.internet_gateway.internet_gateway_id
+  nat_gateway_id_input      = module.nat_gateway.nat_gateway_id  # Should work now
+  public_subnet_ids         = module.subnet.public_subnets
+  private_subnet_ids        = module.subnet.private_subnets
+  route_table_name          = "${var.project_name}-route-table"
+
+  depends_on = [
+    module.vpc,
+    module.subnet,
+    module.internet_gateway,
+    module.nat_gateway
+  ]
+}
+
+module "keyPair" {
+  source                 = "./modules/KeyPair"
+  key_pair_name          = "my-key-pair"
+  encryption_algorithm    = "RSA"
+  encryption_key_bits     = 4096
+
+  # Ensure key pair is created after the VPC
+  depends_on = [module.vpc]
+}
+
+module "security_group" {
+  source        = "./modules/SecurityGroup"
+  resource_name = var.project_name 
+  vpc_id       = module.vpc.vpc_id
+}
+
+module "public_instances" {
+  source                     = "./modules/EC2"
+  resource_name              = var.project_name
+  private_instance_count     = 0
+  bastion_instance_count     = var.bastion_instance_count
+  user_data                  = var.user_data
+
+  ami_id                     = var.ami_id
+  instance_type              = var.instance_type
+  subnet_ids                 = module.subnet.public_subnets  # Change this line
+  subnet_configs             = var.subnet_configs
+  security_group_ids         = {
+    bastion = module.security_group.bastion_security_group_id
+    private = module.security_group.private_instance_security_group_id
   }
+  key_name                   = "my-key-pair" 
+
+  # Ensure public instances are created after the subnets, security groups, and route table
+  depends_on = [
+    module.subnet,
+    module.security_group,
+    module.route_table
+  ]
+}
+
+module "private_instances" {
+  source                     = "./modules/EC2"
+  resource_name              = var.project_name
+  private_instance_count     = 2
+  bastion_instance_count     = var.bastion_instance_count
+
+  ami_id                     = var.ami_id
+  instance_type              = var.instance_type
+  subnet_ids                 = module.subnet.private_subnets  # Change this line
+  subnet_configs             = var.subnet_configs
+  security_group_ids         = {
+    bastion = module.security_group.bastion_security_group_id
+    private = module.security_group.private_instance_security_group_id
+  }
+  key_name                   = "my-key-pair" 
+  user_data                  = var.user_data
+
+  # Ensure private instances are created after the subnets, security groups, NAT gateway, and route table
+  depends_on = [
+    module.subnet,
+    module.nat_gateway,
+    module.route_table
+  ]
+}
+
+
+module "load_balancer" {
+  source             = "./modules/LoadBalancer"
+  is_internal        = false
+  security_group_ids = [
+    module.security_group.bastion_security_group_id,
+    module.security_group.private_instance_security_group_id
+  ]
+  resource_name      = var.project_name
+  load_balancer_name = "${var.project_name}-lb"
+  subnet_ids         = module.subnet.public_subnets
+  vpc_id             = module.vpc.vpc_id
+
+  # Use only private instance IDs
+  instance_ids       = module.private_instances.private_instance_ids
+
+  depends_on = [
+    module.public_instances,
+    module.security_group,
+    module.route_table
+  ]
+}

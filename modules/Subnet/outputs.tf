@@ -4,11 +4,11 @@ output "subnet_ids_by_name" {
 }
 
 output "public_subnets" {
-  description = "List of IDs of public subnets."
-  value       = [for subnet_key, subnet in aws_subnet.subnets : subnet.id if subnet.map_public_ip_on_launch == true]
+  value = [for key, subnet in aws_subnet.subnets : subnet.id if subnet.map_public_ip_on_launch]
+  description = "A list of IDs for public subnets."
 }
 
 output "private_subnets" {
-  description = "List of IDs of private subnets."
-  value       = [for subnet_key, subnet in aws_subnet.subnets : subnet.id if subnet.map_public_ip_on_launch == false]
+  value = [for key, subnet in aws_subnet.subnets : subnet.id if !subnet.map_public_ip_on_launch]
+  description = "A list of IDs for private subnets."
 }

@@ -46,10 +46,10 @@ variable "security_group_ids" {
 }
 
 variable "subnet_configs" {
-  description = "A map of subnet configurations."
-  type        = map(object({
-    cidr_block        = string
-    az                = string
-    assign_public_ip  = optional(bool, false)  # Add this line if you want to use this attribute
+  description = "Configuration for subnets"
+  type = map(object({
+    cidr_block          = string
+    availability_zone   = string  # This is likely what "az" refers to
+    assign_public_ip    = optional(bool)
   }))
 }

@@ -4,10 +4,9 @@ variable "vpc_id" {
 }
 
 variable "subnet_configs" {
-  description = "A map of subnet configurations, where each key is the subnet name and value is an object containing subnet details"
   type = map(object({
-    cidr_block              = string
-    availability_zone       = string
-    assign_public_ip        = bool
+    cidr_block        = string
+    availability_zone = string
+    assign_public_ip  = bool
   }))
 }

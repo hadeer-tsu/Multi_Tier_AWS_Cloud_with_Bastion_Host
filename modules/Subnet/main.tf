@@ -10,3 +10,7 @@ resource "aws_subnet" "subnets" {
       Name = each.key
   }
 }
+
+locals {
+  subnet_ids = { for key, value in aws_subnet.subnets : key => value.id }
+}
