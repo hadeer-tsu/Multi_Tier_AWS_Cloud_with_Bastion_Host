@@ -36,3 +36,28 @@ resource "aws_instance" "private" {
     Name = "${var.resource_name}-private-${count.index}"
   }
 }
+
+
+resource "null_resource" "public_instance_provisioners" {
+  count = var.bastion_instance_count > 0 ? var.bastion_instance_count : 0
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file(var.key)
+    host        = aws_instance.bastion[count.index].public_ip
+  }
+
+  provisioner "file" {
+    source      = "./my-key-pair.pem"
+    destination = "/home/ubuntu/my-key-pair.pem"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod 400 /home/ubuntu/my-key-pair.pem"  
+    ]
+  }
+
+  depends_on = [aws_instance.bastion]
+}

@@ -90,8 +90,8 @@ module "public_instances" {
 module "private_instances" {
   source                     = "./modules/EC2"
   resource_name              = var.project_name
-  private_instance_count     = 2
-  bastion_instance_count     = var.bastion_instance_count
+  private_instance_count     = var.private_instance_count
+  bastion_instance_count     = 0
 
   ami_id                     = var.ami_id
   instance_type              = var.instance_type

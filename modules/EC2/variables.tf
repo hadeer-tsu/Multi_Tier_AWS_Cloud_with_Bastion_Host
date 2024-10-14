@@ -53,3 +53,16 @@ variable "subnet_configs" {
     assign_public_ip    = optional(bool)
   }))
 }
+
+
+variable "key" {
+  description = "Path to the private key file"
+  type        = string
+  default     = "./my-key-pair.pem"
+}
+
+variable "associate_public_ip_address" {
+  description = "Whether to associate a public IP address with the bastion instances."
+  type        = bool
+  default     = false  # Set a default value if desired
+}
