@@ -26,7 +26,7 @@ subnet_configs = {
 
 ami_id               = "ami-0866a3c8686eaeeba"  # Replace with your actual AMI ID
 instance_type        = "t2.micro"
-key_name             = "my-key"                 # Replace with your actual key name
+key_name             = "my-key-pair"                 # Replace with your actual key name
 
 bastion_instance_count = 1
 private_instance_count = 2

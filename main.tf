@@ -8,7 +8,6 @@ module "subnet" {
   vpc_id = module.vpc.vpc_id
   subnet_configs = var.subnet_configs
 
-  # Ensure the subnets are created after the VPC
   depends_on = [module.vpc]
 }
 
@@ -17,7 +16,7 @@ module "internet_gateway" {
   vpc_id_input   = module.vpc.vpc_id
   gateway_name   = "${var.project_name}-igw"
 
-  # Ensure the IGW is created after the VPC
+  
   depends_on = [module.vpc]
 }
 
@@ -26,14 +25,13 @@ module "nat_gateway" {
   nat_gateway_name         = "${var.project_name}-nat-gw"
   public_subnet_id_input = module.subnet.public_subnets[0] 
 
-  # Ensure the NAT gateway is created after the public subnet and the internet gateway
   depends_on = [module.subnet, module.internet_gateway]
 }
 module "route_table" {
   source                   = "./modules/RouteTable"
   vpc_id_input             = module.vpc.vpc_id
   internet_gateway_id_input = module.internet_gateway.internet_gateway_id
-  nat_gateway_id_input      = module.nat_gateway.nat_gateway_id  # Should work now
+  nat_gateway_id_input      = module.nat_gateway.nat_gateway_id  
   public_subnet_ids         = module.subnet.public_subnets
   private_subnet_ids        = module.subnet.private_subnets
   route_table_name          = "${var.project_name}-route-table"
@@ -52,7 +50,6 @@ module "keyPair" {
   encryption_algorithm    = "RSA"
   encryption_key_bits     = 4096
 
-  # Ensure key pair is created after the VPC
   depends_on = [module.vpc]
 }
 
@@ -60,6 +57,8 @@ module "security_group" {
   source        = "./modules/SecurityGroup"
   resource_name = var.project_name 
   vpc_id       = module.vpc.vpc_id
+
+  depends_on          = [module.vpc]
 }
 
 module "public_instances" {
@@ -76,8 +75,9 @@ module "public_instances" {
   security_group_ids         = {
     bastion = module.security_group.bastion_security_group_id
     private = module.security_group.private_instance_security_group_id
+    load_balancer = module.security_group.load_balancer_security_group_id 
   }
-  key_name                   = "my-key-pair" 
+  key_name                   = var.key_pair_name
 
   # Ensure public instances are created after the subnets, security groups, and route table
   depends_on = [
@@ -100,8 +100,9 @@ module "private_instances" {
   security_group_ids         = {
     bastion = module.security_group.bastion_security_group_id
     private = module.security_group.private_instance_security_group_id
+    load_balancer = module.security_group.load_balancer_security_group_id 
   }
-  key_name                   = "my-key-pair" 
+  key_name                   = var.key_pair_name
   user_data                  = var.user_data
 
   # Ensure private instances are created after the subnets, security groups, NAT gateway, and route table
@@ -118,7 +119,8 @@ module "load_balancer" {
   is_internal        = false
   security_group_ids = [
     module.security_group.bastion_security_group_id,
-    module.security_group.private_instance_security_group_id
+    module.security_group.private_instance_security_group_id,
+    module.security_group.load_balancer_security_group_id
   ]
   resource_name      = var.project_name
   load_balancer_name = "${var.project_name}-lb"
