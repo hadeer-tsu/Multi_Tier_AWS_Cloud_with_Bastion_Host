@@ -6,6 +6,7 @@ This project establishes a secure and scalable cloud infrastructure utilizing AW
 
 ## Project Structure
 
+```
 ├── main.tf
 ├── modules
 │   ├── EC2
@@ -48,6 +49,7 @@ This project establishes a secure and scalable cloud infrastructure utilizing AW
 ├── provider.tf
 ├── terraform.tfvars
 └── variables.tf
+```
 
 
 ## Key Components
